@@ -1,0 +1,91 @@
+aws apigateway create-rest-api --name eventmanager
+{
+    "id": "oia4ubelai",
+    "name": "eventmanager",
+    "createdDate": 1593232820,
+    "apiKeySource": "HEADER",
+    "endpointConfiguration": {
+        "types": [
+            "EDGE"
+        ]
+    }
+}
+
+aws apigateway get-resources --rest-api-id
+aws apigateway get-resources --rest-api-id oia4ubelai
+{
+    "items": [
+        {
+            "id": "cxnz4265cc",
+            "path": "/"
+        },
+        {
+            "id": "xyf1fl",
+            "parentId": "cxnz4265cc",
+            "pathPart": "events",
+            "path": "/events"
+        }
+    ]
+}
+
+
+aws apigateway create-resource --rest-api-id rest-api-id --parent-id root-path-id --path-part events
+
+aws apigateway create-resource --rest-api-id oia4ubelai --parent-id cxnz4265cc --path-part events
+
+{
+    "id": "ienbzo",
+    "parentId": "cxnz4265cc",
+    "pathPart": "events",
+    "path": "/events"
+}
+
+aws apigateway put-method --rest-api-id oia4ubelai --resource-id ienbzo --http-method ANY --authorization-type NONE
+aws apigateway put-method --rest-api-id rest-api-id --resource-id resource-id --http-method ANY --authorization-type NONE
+
+{
+    "httpMethod": "ANY",
+    "authorizationType": "NONE",
+    "apiKeyRequired": false
+}
+
+
+aws apigateway put-integration --rest-api-id rest-api-id \
+--resource-id resource-id --http-method ANY --type AWS_PROXY \
+--integration-http-method POST \
+--uri arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-2:account-id:function:events/invocations
+
+aws apigateway put-integration --rest-api-id oia4ubelai \
+--resource-id ienbzo --http-method ANY --type AWS_PROXY \
+--integration-http-method POST \
+--uri arn:aws:apigateway:us-east-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-2:521360983625:function:events/invocations
+
+{
+    "type": "AWS_PROXY",
+    "httpMethod": "POST",
+    "uri": "arn:aws:apigateway:us-east-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-2:521360983625:function:events/invocations",
+    "passthroughBehavior": "WHEN_NO_MATCH",
+    "timeoutInMillis": 29000,
+    "cacheNamespace": "ienbzo",
+    "cacheKeyParameters": []
+}
+
+aws apigateway test-invoke-method --rest-api-id rest-api-id --resource-id resource-id --http-method "GET"
+
+aws apigateway test-invoke-method --rest-api-id oia4ubelai --resource-id ienbzo --http-method "GET"
+
+
+aws lambda add-permission --function-name events --statement-id a-GUID \
+--action lambda:InvokeFunction --principal apigateway.amazonaws.com \
+--source-arn arn:aws:execute-api:us-east-1:account-id:rest-api-id/*/*/*
+
+*****GUID generated via https://www.guidgenerator.com/online-guid-generator.aspx
+
+aws lambda add-permission --function-name events --statement-id 8cbb0684-b022-4764-a5f5-20c54eb45f32 \
+--action lambda:InvokeFunction --principal apigateway.amazonaws.com \
+--source-arn arn:aws:execute-api:us-east-2:521360983625:oia4ubelai/*/*/*
+
+{
+    "Statement": "{\"Sid\":\"8cbb0684-b022-4764-a5f5-20c54eb45f32\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"apigateway.amazonaws.com\"},\"Action\":\"lambda:InvokeFunction\",\"Resource\":\"arn:aws:lambda:us-east-2:521360983625:function:events\",\"Condition\":{\"ArnLike\":{\"AWS:SourceArn\":\"arn:aws:execute-api:us-east-2:521360983625:oia4ubelai/*/*/*\"}}}"
+}
+

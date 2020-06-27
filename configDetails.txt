@@ -1,0 +1,61 @@
+**********Adding a policy to iam user role
+aws iam put-role-policy --role-name lambda-events-executor \
+--policy-name dynamodb-item-crud-role \
+--policy-document file://privilage-policy.json
+
+{
+    "Role": {
+        "Path": "/",
+        "RoleName": "lambda-events-executor",
+        "RoleId": "AROAXSY4JIZET64PNYFYG",
+        "Arn": "arn:aws:iam::521360983625:role/lambda-events-executor",
+        "CreateDate": "2020-06-26T11:48:48Z",
+        "AssumeRolePolicyDocument": {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Effect": "Allow",
+                    "Principal": {
+                        "Service": "lambda.amazonaws.com"
+                    },
+                    "Action": "sts:AssumeRole"
+                }
+            ]
+        }
+    }
+}
+
+aws lambda create-function --function-name events --runtime go1.x --role arn:aws:iam::521360983625:role/lambda-events-executor --handler events --zip-file fileb://events.zip
+
+{
+    "FunctionName": "events",
+    "FunctionArn": "arn:aws:lambda:us-east-2:521360983625:function:events",
+    "Runtime": "go1.x",
+    "Role": "arn:aws:iam::521360983625:role/lambda-events-executor",
+    "Handler": "events",
+    "CodeSize": 5003434,
+    "Description": "",
+    "Timeout": 3,
+    "MemorySize": 128,
+    "LastModified": "2020-06-26T13:06:35.992+0000",
+    "CodeSha256": "E5Ahj+9nI3Xss4dDZP2Kt9xGkvQ8F4f2NFBMnHiHBVs=",
+    "Version": "$LATEST",
+    "TracingConfig": {
+        "Mode": "PassThrough"
+    },
+    "RevisionId": "448e486e-63e9-4f52-8802-ecb60c9abba2",
+    "State": "Active",
+    "LastUpdateStatus": "Successful"
+}
+
+aws lambda invoke --function-name events ./out/output.json
+
+aws dynamodb put-item --table-name Books --item '{"Name": {"S": "Test event 1"}, "Description": {"S": "Demoo"}, "Status":  {"S": "Idle"}}'
+
+env GOOS=linux GOARCH=amd64 go build events 
+build-lambda-zip.exe -o events.zip events  
+
+aws lambda update-function-code --function-name events --zip-file fileb://events.zip
+
+
+aws apigateway create-resource --rest-api-id oia4ubelai --parent-id cxnz4265cc --path-part events
